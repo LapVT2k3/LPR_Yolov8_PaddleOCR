@@ -25,8 +25,6 @@ body = st.container()
 coco_model = YOLO(COCO_MODEL_DIR)
 license_plate_detector = YOLO(LICENSE_MODEL_DETECTION_DIR)
 
-threshold = 0.15
-
 state = "Uploader"
 
 if "state" not in st.session_state :

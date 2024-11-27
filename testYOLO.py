@@ -6,10 +6,10 @@ from util import read_license_plate
 model = YOLO('./models/best (2).pt')
 
 # Mode selection: 'camera', 'video', or 'image'
-mode = "camera"  # Thay đổi giữa 'camera', 'video', 'image'
+mode = "video"  # Thay đổi giữa 'camera', 'video', 'image'
 
 # Path for video or image (chỉ dùng khi mode là 'video' hoặc 'image')
-video_path = "./data_test/video/2.mp4"  # Đường dẫn video
+video_path = "./data_test/video/1.mp4"  # Đường dẫn video
 image_path = "./data_test/image/2.jpg"  # Đường dẫn ảnh
 
 # Desired display size (width x height)
@@ -59,8 +59,8 @@ while ret:
         # cv2.putText(frame, license_plate_text, (int(x1), int(y1) - 10),
         #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-        # Print license plate text
-        print(f"Detected License Plate: {license_plate_text} (Score: {license_plate_text_score})")
+        # # Print license plate text
+        # print(f"Detected License Plate: {license_plate_text} (Score: {license_plate_text_score})")
 
     # Resize frame for display
     resized_frame = cv2.resize(frame, (display_width, display_height))
