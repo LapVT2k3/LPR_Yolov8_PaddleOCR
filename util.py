@@ -3,15 +3,6 @@ import base64
 import streamlit as st
 
 def set_background(image_file):
-    """
-    This function sets the background of a Streamlit app to an image specified by the given image file.
-
-    Parameters:
-        image_file (str): The path to the image file to be used as the background.
-
-    Returns:
-        None
-    """
     with open(image_file, "rb") as f:
         img_data = f.read()
     b64_encoded = base64.b64encode(img_data).decode()
@@ -25,90 +16,83 @@ def set_background(image_file):
     """
     st.markdown(style, unsafe_allow_html=True)
 
-# Initialize the OCR reader
 reader = easyocr.Reader(['en'], gpu=False)
 
-# Mapping dictionaries for character conversion
-dict_char_to_int = {'O': '0',
-                    'I': '1',
-                    'J': '3',
-                    'A': '4',
-                    'G': '6',
-                    'S': '5'}
+# def read_license_plate(license_plate_crop):
+#     detections = reader.readtext(license_plate_crop)
+#     print(detections)
 
-dict_int_to_char = {'0': 'O',
-                    '1': 'I',
-                    '3': 'J',
-                    '4': 'A',
-                    '6': 'G',
-                    '5': 'S'}
+#     if detections == [] :
+#         return None, None
 
+#     for detection in detections:
+#         bbox, text, score = detection
 
-def write_csv(results, output_path):
-    """
-    Write the results to a CSV file.
+#         text = text.upper()
+#         print(text)
 
-    Args:
-        results (dict): Dictionary containing the results.
-        output_path (str): Path to the output CSV file.
-    """
-    with open(output_path, 'w') as f:
-        f.write('{},{},{},{},{},{},{}\n'.format('frame_nmr', 'car_id', 'car_bbox',
-                                                'license_plate_bbox', 'license_plate_bbox_score', 'license_number',
-                                                'license_number_score'))
+#         if text is not None and score is not None and bbox is not None and len(text) >= 6:
+#             return text, score
 
-        for frame_nmr in results.keys():
-            for car_id in results[frame_nmr].keys():
-                print(results[frame_nmr][car_id])
-                if 'car' in results[frame_nmr][car_id].keys() and \
-                   'license_plate' in results[frame_nmr][car_id].keys() and \
-                   'text' in results[frame_nmr][car_id]['license_plate'].keys():
-                    f.write('{},{},{},{},{},{},{}\n'.format(frame_nmr,
-                                                            car_id,
-                                                            '[{} {} {} {}]'.format(
-                                                                results[frame_nmr][car_id]['car']['bbox'][0],
-                                                                results[frame_nmr][car_id]['car']['bbox'][1],
-                                                                results[frame_nmr][car_id]['car']['bbox'][2],
-                                                                results[frame_nmr][car_id]['car']['bbox'][3]),
-                                                            '[{} {} {} {}]'.format(
-                                                                results[frame_nmr][car_id]['license_plate']['bbox'][0],
-                                                                results[frame_nmr][car_id]['license_plate']['bbox'][1],
-                                                                results[frame_nmr][car_id]['license_plate']['bbox'][2],
-                                                                results[frame_nmr][car_id]['license_plate']['bbox'][3]),
-                                                            results[frame_nmr][car_id]['license_plate']['bbox_score'],
-                                                            results[frame_nmr][car_id]['license_plate']['text'],
-                                                            results[frame_nmr][car_id]['license_plate']['text_score'])
-                            )
-        f.close()
+#     return None, None
 
 def read_license_plate(license_plate_crop):
     """
-    Read the license plate text from the given cropped image.
-
+    Đọc số biển xe từ ảnh cắt, hỗ trợ cả biển số 1 hàng và 2 hàng dựa trên tỉ lệ chiều dài/chiều cao.
+    
     Args:
-        license_plate_crop (PIL.Image.Image): Cropped image containing the license plate.
-
+        license_plate_crop (numpy.ndarray): Ảnh đã cắt chứa biển số xe.
+        
     Returns:
-        tuple: Tuple containing the formatted license plate text and its confidence score.
+        tuple: (text_bien_so, score_trung_binh) nếu đọc được,
+               (None, None) nếu không đọc được.
     """
+    global reader
 
-    detections = reader.readtext(license_plate_crop)
-    print(detections)
+    # Xác định kích thước ảnh
+    height, width = license_plate_crop.shape[:2]
 
-    if detections == [] :
-        return None, None
+    # Tính tỉ lệ chiều dài / chiều cao
+    aspect_ratio = width / height
 
-    for detection in detections:
-        bbox, text, score = detection
+    # Ngưỡng tỉ lệ để phân biệt biển số 1 hàng và 2 hàng (có thể điều chỉnh)
+    threshold_ratio = 2.5  # Tùy chỉnh ngưỡng dựa trên kích thước thực tế
 
-        #text = text.upper().replace(' ', '')
-        text = text.upper()
-        print(text)
+    if aspect_ratio > threshold_ratio:  # Biển số 1 hàng (tỉ lệ dài)
+        detections = reader.readtext(license_plate_crop)
+        if len(detections) > 0:
+            _, text, score = detections[0]
+            return text.replace(" ", ""), score
 
-        if text is not None and score is not None and bbox is not None and len(text) >= 6:
-        #if license_complies_format(text):
-        #    return format_license(text), score
-            return text, score
+    else:  # Biển số 2 hàng (tỉ lệ nhỏ)
+        # Chia ảnh biển số thành 2 phần
+        mid_height = height // 2
+        top_crop = license_plate_crop[0:mid_height, :]  # Hàng trên
+        bottom_crop = license_plate_crop[mid_height:, :]  # Hàng dưới
+
+        # Đọc từng hàng
+        text_top, score_top = None, 0
+        text_bottom, score_bottom = None, 0
+
+        if top_crop.size > 0:
+            detections_top = reader.readtext(top_crop)
+            if len(detections_top) > 0:
+                _, text_top, score_top = detections_top[0]
+
+        if bottom_crop.size > 0:
+            detections_bottom = reader.readtext(bottom_crop)
+            if len(detections_bottom) > 0:
+                _, text_bottom, score_bottom = detections_bottom[0]
+
+        # Ghép kết quả
+        if text_top and text_bottom:
+            full_text = text_top.replace(" ", "") + " " + text_bottom.replace(" ", "")
+            avg_score = (score_top + score_bottom) / 2
+            return full_text, avg_score
+        elif text_top:
+            return text_top.replace(" ", ""), score_top
+        elif text_bottom:
+            return text_bottom.replace(" ", ""), score_bottom
 
     return None, None
 
