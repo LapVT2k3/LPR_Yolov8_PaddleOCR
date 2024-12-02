@@ -6,7 +6,6 @@ import cv2
 # import easyocr
 from paddleocr import PaddleOCR, draw_ocr
 import pandas as pd
-from util import set_background
 import uuid
 import os
 import re
@@ -14,7 +13,7 @@ import re
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE" 
 os.environ['OMP_NUM_THREADS'] = '1'
 font_path = "arial.ttf"
-set_background("./imgs/background.png")
+# set_background("./imgs/background.png")
 
 folder_path = "./licenses_plates_imgs_detected/"
 LICENSE_MODEL_DETECTION_DIR = './models/best (3).pt'
@@ -171,15 +170,15 @@ def model_prediction(img):
     object_detections = coco_model(img)[0]
     license_detections = license_plate_detector(img)[0]
 
-    if len(object_detections.boxes.cls.tolist()) != 0 :
-        for detection in object_detections.boxes.data.tolist() :
-            xcar1, ycar1, xcar2, ycar2, car_score, class_id = detection
+    # if len(object_detections.boxes.cls.tolist()) != 0 :
+    #     for detection in object_detections.boxes.data.tolist() :
+    #         xcar1, ycar1, xcar2, ycar2, car_score, class_id = detection
 
-            if int(class_id) in vehicles :
-                cv2.rectangle(img, (int(xcar1), int(ycar1)), (int(xcar2), int(ycar2)), (0, 0, 255), 3)
-    else :
-            xcar1, ycar1, xcar2, ycar2 = 0, 0, 0, 0
-            car_score = 0
+    #         if int(class_id) in vehicles :
+    #             cv2.rectangle(img, (int(xcar1), int(ycar1)), (int(xcar2), int(ycar2)), (0, 0, 255), 3)
+    # else :
+    #         xcar1, ycar1, xcar2, ycar2 = 0, 0, 0, 0
+    #         car_score = 0
 
     if len(license_detections.boxes.cls.tolist()) != 0 :
         license_plate_crops_total = []
@@ -193,9 +192,9 @@ def model_prediction(img):
 
             license_plate_crop = img[int(y1):int(y2), int(x1): int(x2), :]
 
-            img_name = '{}.jpg'.format(uuid.uuid1())
-         
-            cv2.imwrite(os.path.join(folder_path, img_name), license_plate_crop)
+            # img_name = '{}.jpg'.format(uuid.uuid1())
+            # cv2.imwrite(os.path.join(folder_path, img_name), license_plate_crop)
+            
             
             # license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY) 
             # _, license_plate_crop_thresh = cv2.threshold(license_plate_crop_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
