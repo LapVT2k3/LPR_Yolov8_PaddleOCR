@@ -3,14 +3,14 @@ import cv2
 from util import read_license_plate
 
 # Load YOLO model
-model = YOLO('./models/best (2).pt')
+model = YOLO('./models/best (3).pt')
 
 # Mode selection: 'camera', 'video', or 'image'
-mode = "video"  # Thay đổi giữa 'camera', 'video', 'image'
+mode = "image"  # Thay đổi giữa 'camera', 'video', 'image'
 
 # Path for video or image (chỉ dùng khi mode là 'video' hoặc 'image')
 video_path = "./data_test/video/1.mp4"  # Đường dẫn video
-image_path = "./data_test/image/2.jpg"  # Đường dẫn ảnh
+image_path = "./data_test/image/5.jpg"  # Đường dẫn ảnh
 
 # Desired display size (width x height)
 display_width = 1280
